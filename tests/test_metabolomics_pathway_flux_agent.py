@@ -4,11 +4,12 @@ Domain: Clinical & Biomedical AI
 Standard: CAP / CLSI / ISO Standards
 """
 import sys
+import math
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pytest
-from agents.base import PHIGuard, AuditLogger, SecurityException
+from agents.base import PHIGuard, AuditLogger, AuditTrail, ActionExecutor, SecurityException
 from agents.models import SystemTaskPayload, UrgencyLevel, SystemIntegrityStatus
 from agents.workers import InvariantQCWorker, SafetyEscalationWorker, ProtocolConformanceWorker
 from agents.supervisor import SystemSupervisor
@@ -21,6 +22,13 @@ def test_phi_guard_enforcement():
 
     # Clean text passes
     PHIGuard.assert_no_phi("Analytical assay specimen KEY-001 optimal")
+
+
+def test_phi_redaction():
+    redacted = PHIGuard.redact_phi("Contact patient at 555-123-4567 or MRN-12345")
+    assert "555-123-4567" not in redacted
+    assert "MRN-12345" not in redacted
+    assert "[REDACTED_IDENTIFIER]" in redacted
 
 
 def test_specialized_workers():
@@ -63,3 +71,53 @@ def test_supervisor_consensus_and_audit():
     assert main(["audit", "--task-id", "CLI-TEST-01"]) == 0
     assert main(["chat", "Explain", "specifications"]) == 0
     assert main(["verify-audit"]) == 0
+
+
+def test_metric_validation_rejects_nan():
+    with pytest.raises(Exception):
+        SystemTaskPayload(task_id="T-NAN", target_identifier="KEY-NAN", primary_metric=float("nan"))
+
+
+def test_metric_validation_rejects_inf():
+    with pytest.raises(Exception):
+        SystemTaskPayload(task_id="T-INF", target_identifier="KEY-INF", secondary_metric=float("inf"))
+
+
+def test_audit_trail_signature_verification():
+    """Verify that AuditTrail detects tampered entries via HMAC signature verification."""
+    trail = AuditTrail(secret_key="test-secret-key-for-verification")
+    trail.log("test_actor", "test_tier", "TEST_EVENT", {"data": "value1"})
+    trail.log("test_actor", "test_tier", "TEST_EVENT", {"data": "value2"})
+
+    # Integrity should pass for untampered trail
+    assert trail.verify_integrity() is True
+
+    # Tamper with an entry's payload_hash
+    trail.logs[0]["payload_hash"] = "tampered_hash_value"
+    assert trail.verify_integrity() is False
+
+
+def test_audit_trail_chain_verification():
+    """Verify that AuditTrail detects broken chain links."""
+    trail = AuditTrail(secret_key="test-secret-key-for-chain")
+    trail.log("actor1", "tier1", "EVENT1", {"k": "v1"})
+    trail.log("actor2", "tier2", "EVENT2", {"k": "v2"})
+
+    assert trail.verify_integrity() is True
+
+    # Break the chain by modifying prev_hash
+    trail.logs[1]["prev_hash"] = "broken_link"
+    assert trail.verify_integrity() is False
+
+
+def test_action_executor_audits_success():
+    result = ActionExecutor.execute_with_audit("test", "tier", "TEST_ACTION", lambda: 42)
+    assert result == 42
+
+
+def test_action_executor_audits_failure():
+    def failing_func():
+        raise ValueError("intentional failure")
+
+    with pytest.raises(ValueError, match="intentional failure"):
+        ActionExecutor.execute_with_audit("test", "tier", "FAIL_ACTION", failing_func)

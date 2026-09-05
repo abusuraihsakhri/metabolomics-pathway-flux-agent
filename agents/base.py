@@ -8,6 +8,8 @@ import json
 import time
 import hmac
 import hashlib
+import secrets
+import warnings
 from typing import Dict, Any, List, Optional
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field
@@ -57,7 +59,16 @@ class PHIGuard:
 class AuditTrail:
     """Cryptographic Tamper-Evident HMAC-SHA256 Audit Trail."""
     def __init__(self, secret_key: Optional[str] = None):
-        self.secret_key = (secret_key or os.getenv("AUDIT_SECRET_KEY", "metabolomics-pathway-flux-agent-master-audit-key-2026")).encode("utf-8")
+        resolved_key = secret_key or os.getenv("AUDIT_SECRET_KEY")
+        if not resolved_key:
+            warnings.warn(
+                "AUDIT_SECRET_KEY not set — generating ephemeral key. "
+                "Set AUDIT_SECRET_KEY env var for persistent audit integrity.",
+                RuntimeWarning,
+                stacklevel=2,
+            )
+            resolved_key = secrets.token_hex(32)
+        self.secret_key = resolved_key.encode("utf-8")
         self.logs: List[Dict[str, Any]] = []
 
     def log(self, actor: str, actor_tier: str, event_type: str, details: Dict[str, Any]) -> Dict[str, Any]:
@@ -83,9 +94,19 @@ class AuditTrail:
         return entry
 
     def verify_integrity(self) -> bool:
+        """Verify both chain linkage and HMAC signatures of all audit entries."""
         for i, entry in enumerate(self.logs):
+            # Verify chain linkage
             prev = self.logs[i-1]["current_hash"] if i > 0 else "GENESIS_BLOCK_0000000000000000"
             if entry["prev_hash"] != prev:
+                return False
+            # Verify HMAC signature
+            sign_string = (
+                f"{entry['audit_id']}|{entry['timestamp']}|{entry['actor']}|"
+                f"{entry['actor_tier']}|{entry['event_type']}|{entry['payload_hash']}|{entry['prev_hash']}"
+            )
+            expected_sig = hmac.new(self.secret_key, sign_string.encode("utf-8"), hashlib.sha256).hexdigest()
+            if not hmac.compare_digest(entry["current_hash"], expected_sig):
                 return False
         return True
 
@@ -113,6 +134,10 @@ class AuditLogger:
 class ActionExecutor:
     @staticmethod
     def execute_with_audit(actor: str, actor_tier: str, action_type: str, fn, *args, **kwargs):
-        res = fn(*args, **kwargs)
-        AuditLogger.log(actor, actor_tier, action_type, {"status": "SUCCESS"})
-        return res
+        try:
+            res = fn(*args, **kwargs)
+            AuditLogger.log(actor, actor_tier, action_type, {"status": "SUCCESS"})
+            return res
+        except Exception as exc:
+            AuditLogger.log(actor, actor_tier, action_type, {"status": "FAILED", "error": str(exc)})
+            raise
