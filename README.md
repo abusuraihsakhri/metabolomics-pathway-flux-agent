@@ -27,32 +27,32 @@ Any critical alert takes priority; otherwise any alert makes the overall status 
 
 Requires Python 3.10+.
 
-\`\`\`bash
+```bash
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -e ".[server,test]"
 python -m pytest -q
-\`\`\`
+```
 
 Run single- and multi-record evaluations:
 
-\`\`\`bash
+```bash
 python cli.py audit --task-id TASK-001 --target SAMPLE-A --primary 28.5 --secondary 14.2 --status DISCORDANT
 python cli.py batch -i sample.csv -o results.csv
 python cli.py verify-audit
 python -m flux_balance.cli audit
-\`\`\`
+```
 
 For CSV batch input, use task_id, target_identifier and primary_metric, with optional secondary_metric, status_descriptor, is_critical_flag. Flags accept true/false, 1/0 and yes/no (case-insensitive). Invalid flags are rejected rather than silently interpreted. The Python CLIs preserve the existing output formats.
 
 ## API and container
 
-\`\`\`bash
+```bash
 python cli.py serve --host 127.0.0.1 --port 8000
 # or
 docker build -t metabolomics-pathway-flux-agent .
 docker run --rm -p 127.0.0.1:8000:8000 -e AUDIT_SECRET_KEY="<a-generated-random-secret>" metabolomics-pathway-flux-agent
-\`\`\`
+```
 
 Endpoints:
 
@@ -60,19 +60,19 @@ Endpoints:
 - GET /metrics: counts of dossiers and audit records
 - POST /api/audit: evaluate SystemTaskPayload
 - POST /api/chat: deterministic mock response (not a live language-model integration)
-- GET /api/audit/logs: administrative audit-chain verification; **disabled** unless AUDIT_LOG_READ_TOKEN is configured, then requires \`Authorization: Bearer <token>\`
+- GET /api/audit/logs: administrative audit-chain verification; **disabled** unless AUDIT_LOG_READ_TOKEN is configured, then requires `Authorization: Bearer <token>`
 
-The in-memory HMAC-SHA256 chain uses AUDIT_SECRET_KEY or a randomly generated **ephemeral** process key; restarts discard the records and an ephemeral key cannot verify past processes. Generate a deployment key with \`python -c "import secrets; print(secrets.token_hex(32))"\`; keep it server-side, outside source control. For Docker Compose, supply AUDIT_SECRET_KEY via a local .env file (not committed). The default container mapping binds to localhost.
+The in-memory HMAC-SHA256 chain uses AUDIT_SECRET_KEY or a randomly generated **ephemeral** process key; restarts discard the records and an ephemeral key cannot verify past processes. Generate a deployment key with `python -c "import secrets; print(secrets.token_hex(32))"`; keep it server-side, outside source control. For Docker Compose, supply AUDIT_SECRET_KEY via a local .env file (not committed). The default container mapping binds to localhost.
 
 The Python input guard checks selected common identifier patterns but is **not** complete PHI de-identification, HIPAA certification, or a guarantee against data leakage. Only submit non-identifiable synthetic or appropriately de-identified research data. Do not expose the backend publicly without separate authentication, rate limiting, encryption in transit and operational controls.
 
 ## Development and tests
 
-\`\`\`bash
+```bash
 python -m pytest -q
 node --test web/core.test.mjs
 python -m compileall -q agents flux_balance cli.py input_parsing.py
-\`\`\`
+```
 
 GitHub Actions tests the package and Python code on 3.10, 3.11 and 3.12, plus the browser-side rules on Node.js 22. The static interface is intended for current Chrome, Firefox, Safari and Edge; browser-level end-to-end verification is separate from unit tests.
 
