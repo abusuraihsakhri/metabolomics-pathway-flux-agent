@@ -1,10 +1,12 @@
 """
 FastAPI REST API Server for Metabolomics Pathway Flux Agent.
 """
+import os
+import hmac
 from typing import Dict, Any, List
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header
 from pydantic import BaseModel
-from .base import AuditLogger, PHIGuard
+from .base import AuditLogger, PHIGuard, SecurityException
 from .models import SystemTaskPayload, ConsensusDossier
 from .supervisor import SystemSupervisor
 
@@ -37,7 +39,10 @@ def metrics():
 
 @app.post("/api/audit")
 def api_audit(payload: SystemTaskPayload):
-    dossier = supervisor.process_task(payload)
+    try:
+        dossier = supervisor.process_task(payload)
+    except SecurityException:
+        raise HTTPException(status_code=422, detail="Potential sensitive identifier detected; use de-identified input.") from None
     return dossier.to_dict()
 
 
@@ -46,10 +51,17 @@ def api_chat(req: ChatRequest):
     try:
         ans = supervisor.query_supervisory_chat(req.query)
         return {"response": ans}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    except SecurityException:
+        raise HTTPException(status_code=422, detail="Potential sensitive identifier detected; use de-identified input.") from None
 
 
 @app.get("/api/audit/logs")
-def api_audit_logs():
+def api_audit_logs(authorization: str | None = Header(default=None)):
+    """Administrative endpoint; disabled until an access token is configured."""
+    token = os.environ.get("AUDIT_LOG_READ_TOKEN")
+    if not token:
+        raise HTTPException(status_code=503, detail="Audit log access is disabled.")
+    prefix = "Bearer "
+    if not authorization or not authorization.startswith(prefix) or not hmac.compare_digest(authorization[len(prefix):], token):
+        raise HTTPException(status_code=401, detail="Unauthorized.", headers={"WWW-Authenticate": "Bearer"})
     return {"audit_trail": AuditLogger.get_trail(), "verified": AuditLogger.verify_integrity()}

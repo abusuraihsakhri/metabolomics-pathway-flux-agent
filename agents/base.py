@@ -139,5 +139,5 @@ class ActionExecutor:
             AuditLogger.log(actor, actor_tier, action_type, {"status": "SUCCESS"})
             return res
         except Exception as exc:
-            AuditLogger.log(actor, actor_tier, action_type, {"status": "FAILED", "error": str(exc)})
+            AuditLogger.log(actor, actor_tier, action_type, {"status": "FAILED", "error": PHIGuard.redact_phi(str(exc))})
             raise

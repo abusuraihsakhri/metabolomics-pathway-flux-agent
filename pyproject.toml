@@ -1,27 +1,34 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "metabolomics-pathway-flux-engine"
+name = "metabolomics-pathway-flux-agent"
 version = "2.0.0"
-description = "FluxMind: Genome-Scale Metabolic Flux Balance Analysis (FBA) Engine"
+description = "Deterministic measurement triage and audit trail prototype"
 readme = "README.md"
-authors = [{ name = "Dr. Abu Suraih Sakhri", email = "abusuraih@example.com" }]
+requires-python = ">=3.10"
 license = { text = "MIT" }
+authors = [{ name = "Dr. Abu Suraih Sakhri" }]
+dependencies = ["pydantic>=2,<3"]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
-    "Topic :: Security/Cryptography",
-    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
 ]
-requires-python = ">=3.9"
-dependencies = []
+
+[project.optional-dependencies]
+server = ["fastapi>=0.100,<1", "uvicorn>=0.23,<1"]
+test = ["pytest>=8,<10", "httpx>=0.25,<1"]
 
 [project.scripts]
-metabolomics-pathway-flux-engine = "flux_balance.cli:main"
+metabolomics-pathway-flux-agent = "cli:main"
+metabolomics-flux-balance = "flux_balance.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/abusuraihsakhri/metabolomics-pathway-flux-engine"
-Repository = "https://github.com/abusuraihsakhri/metabolomics-pathway-flux-engine.git"
+Homepage = "https://github.com/abusuraihsakhri/metabolomics-pathway-flux-agent"
+Repository = "https://github.com/abusuraihsakhri/metabolomics-pathway-flux-agent"
+
+[tool.setuptools]
+packages = ["agents", "flux_balance"]
+py-modules = ["cli", "enrichment", "simulator", "flux_balance_app", "input_parsing"]
