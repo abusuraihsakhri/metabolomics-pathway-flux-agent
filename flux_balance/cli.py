@@ -5,6 +5,7 @@ import argparse
 import csv
 import json
 import sys
+from input_parsing import parse_boolean
 from .models import FrontierPayload
 from .agents import FluxBalanceCoordinator
 
@@ -51,8 +52,8 @@ def main(argv=None):
         )
         dossier = coordinator.process(payload)
         print("=" * 80)
-        print(f"  FLUXMIND: GENOME-SCALE METABOLIC FLUX BALANCE ANALYSIS (FBA) AGENT")
-        print(f"  Domain: Biomedical Scientific Discovery & Multi-Omics | Standard: COBRA Model / Systems Biology SBML")
+        print(f"  FLUXMIND LEGACY THRESHOLD RULES (NOT FBA)")
+        print(f"  Domain: Demonstration rule engine | No stoichiometric LP or SBML processing")
         print(f"  Task: {dossier['task_id']} | Status: [{dossier['overall_status']}] | Total Alerts: {dossier['total_alerts']}")
         print("=" * 80)
         for a in dossier["alerts"]:
@@ -74,7 +75,7 @@ def main(argv=None):
             fieldnames = list(reader.fieldnames or [])
             rows = list(reader)
 
-        out_fields = fieldnames + ["overall_status", "total_alerts", "critical_count", "consensus_summary"]
+        out_fields = list(dict.fromkeys(fieldnames + ["overall_status", "total_alerts", "critical_count", "consensus_summary"]))
         out_rows = []
         for r in rows:
             payload = FrontierPayload(
@@ -83,7 +84,7 @@ def main(argv=None):
                 primary_metric=float(r.get("primary_metric", 15.0)),
                 secondary_metric=float(r.get("secondary_metric", 5.0)),
                 status_descriptor=r.get("status_descriptor", "NOMINAL"),
-                is_critical_flag=bool(r.get("is_critical_flag", False)),
+                is_critical_flag=parse_boolean(r.get("is_critical_flag", "")),
             )
             dossier = coordinator.process(payload)
             row_dict = dict(r)

@@ -1,5 +1,5 @@
 """
-Enterprise Security, PHI Outbound Guard, and HMAC-SHA256 Audit Trail.
+Pattern-based identifier checks and a process-local HMAC-SHA256 audit chain.
 
 """
 import os
@@ -26,7 +26,7 @@ PHI_PATTERNS = [
 
 
 class SecurityException(Exception):
-    """Raised when outbound data violates HIPAA Safe Harbor or contains raw PHI."""
+    """Raised when a configured identifier pattern matches; not comprehensive PHI detection."""
     pass
 
 
@@ -139,5 +139,5 @@ class ActionExecutor:
             AuditLogger.log(actor, actor_tier, action_type, {"status": "SUCCESS"})
             return res
         except Exception as exc:
-            AuditLogger.log(actor, actor_tier, action_type, {"status": "FAILED", "error": str(exc)})
+            AuditLogger.log(actor, actor_tier, action_type, {"status": "FAILED", "error": PHIGuard.redact_phi(str(exc))})
             raise

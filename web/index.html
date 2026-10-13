@@ -1,236 +1,111 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Metabolomics Pathway Flux Engine — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Browser-only measurement triage prototype for metabolomics-related workflows.">
+  <title>Metabolomics Pathway Flux Agent | Rule evaluation</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui,-apple-system,Segoe UI,sans-serif; background: #0c111d; color: #e6ebf5; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 0 1.25rem 3rem; }
+    .container { max-width: 1100px; margin: auto; }
+    header { padding: 2rem 0 1.3rem; border-bottom: 1px solid #344153; margin-bottom: 1.3rem; }
+    h1 { font-size: clamp(1.4rem,3.4vw,2rem); letter-spacing: -.03em; margin: .2rem 0; }
+    h2 { font-size: 1.1rem; margin: 0 0 1rem; }
+    p { color: #b4c0d1; line-height: 1.55; margin: .55rem 0; }
+    .eyebrow { color: #88b6ff; font-size: .75rem; letter-spacing: .13em; font-weight: 700; }
+    .layout { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 1.25rem; }
+    .card { background: #141d2c; border: 1px solid #304055; border-radius: 12px; padding: 1.25rem; min-width: 0; }
+    .card + .card { margin: 0; }
+    .span { grid-column: 1 / -1; }
+    .stats { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .8rem; margin: 1.2rem 0; }
+    .stat { border: 1px solid #304055; border-radius: 10px; padding: .9rem; background: #111a29; }
+    .stat label { color: #9eacc1; }
+    .stat strong { display: block; margin-top: .45rem; font-size: clamp(.85rem,2vw,1.15rem); overflow-wrap: anywhere; }
+    [data-level="CRITICAL_STAT_PANIC"] { color: #ff9a9a; }
+    [data-level="ELEVATED_RISK"] { color: #fbc17d; }
+    [data-level="ROUTINE"] { color: #80e4af; }
+    label { display: block; color: #d4e0f3; font-weight: 600; font-size: .85rem; margin: 0 0 .35rem; }
+    .field { margin-bottom: .95rem; }
+    input:not([type="checkbox"]),select { width: 100%; min-height: 42px; background: #0b1423; color: #f5f8ff; border: 1px solid #536178; border-radius: 7px; padding: .55rem .75rem; font: inherit; }
+    input:focus-visible,button:focus-visible { outline: 3px solid #8bb8ff; outline-offset: 2px; }
+    .pair { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 1rem; }
+    .check { display: flex; gap: .55rem; align-items: flex-start; padding: .35rem 0 1rem; }
+    .check input { margin-top: .2rem; }
+    .check label { font-weight: 400; }
+    button { cursor: pointer; background: #3d80ed; color: white; font-weight: 700; font: inherit; border: 0; border-radius: 7px; min-height: 42px; padding: .6rem 1rem; }
+    button:hover { background: #2367cf; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .secondary { background: #23334b; border: 1px solid #546b85; }
+    .secondary:hover { background: #334966; }
+    .actions { display: flex; flex-wrap: wrap; gap: .65rem; margin-top: 1rem; }
+    pre { font-size: .79rem; line-height: 1.5; margin: 0; white-space: pre-wrap; overflow-wrap: anywhere; background: #0a111e; padding: .9rem; border-radius: 8px; max-height: 390px; overflow: auto; }
+    .notice { border-left: 3px solid #83b8ff; padding: .5rem .9rem; margin: 1rem 0 1.5rem; background: #17253b; color: #d5e6ff; }
+    #message { min-height: 1.4rem; color: #a3dec0; margin-top: .6rem; }
+    #message[data-kind="error"] { color: #ffaaa7; }
+    table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+    th,td { padding: .7rem; text-align: left; border-bottom: 1px solid #344153; overflow-wrap: anywhere; }
+    .tableScroll { overflow-x: auto; }
+    .small { font-size: .83rem; color: #b5c2d6; }
+    @media (max-width: 740px) { body { padding-inline: .8rem; } .layout { grid-template-columns: 1fr; } .pair { grid-template-columns: 1fr; gap: 0; } .stats { grid-template-columns: 1fr; } }
+  </style>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Metabolomics Pathway Flux Engine</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
+<main class="container">
+  <header>
+    <div class="eyebrow">RESEARCH PROTOTYPE · LOCAL BROWSER EVALUATION</div>
+    <h1>Metabolomics Pathway Flux Agent</h1>
+    <p>Deterministic measurement and descriptor triage using the repository's three threshold rules.</p>
+  </header>
+  <div class="notice" role="note">
+    This tool does <strong>not</strong> perform stoichiometric flux balance analysis, metabolite pathway mapping, or clinical validation.
+    The displayed thresholds are illustrative, not established medical cutoffs. Use non-identifiable research data only.
+    Input stays in this browser tab; no network request is made for evaluation.
+  </div>
+  <div class="stats" aria-label="Session statistics">
+    <div class="stat"><label>Latest evaluation</label><strong id="status" data-level="ROUTINE">Not run</strong></div>
+    <div class="stat"><label>Evaluations in this tab</label><strong id="processed">0</strong></div>
+    <div class="stat"><label>Latest rule alerts</label><strong id="alerts">0</strong></div>
+  </div>
+  <div class="layout">
+    <section class="card" aria-labelledby="inputTitle">
+      <h2 id="inputTitle">Single-record evaluation</h2>
+      <form id="auditForm">
+        <div class="pair">
+          <div class="field"><label for="taskId">Task ID</label><input id="taskId" name="task_id" value="DEMO-001" maxlength="120" required></div>
+          <div class="field"><label for="targetId">De-identified target ID</label><input id="targetId" name="target_identifier" value="TARGET-A" maxlength="120" required></div>
         </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
+        <div class="pair">
+          <div class="field"><label for="primary">Primary measurement</label><input id="primary" name="primary_metric" type="number" step="any" value="28.5" required></div>
+          <div class="field"><label for="secondaryMetric">Secondary measurement</label><input id="secondaryMetric" name="secondary_metric" type="number" step="any" value="14.2" required></div>
         </div>
-    </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Metabolomics Pathway Flux Engine Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "metabolomics-pathway-flux-engine",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+        <div class="field"><label for="descriptor">Status descriptor</label><input id="descriptor" name="status_descriptor" maxlength="120" value="DISCORDANT"></div>
+        <div class="check"><input id="critical" name="is_critical_flag" type="checkbox"><label for="critical">Critical flag (forces critical status)</label></div>
+        <button type="submit">Evaluate record</button>
+      </form>
+    </section>
+    <section class="card" aria-labelledby="resultTitle">
+      <h2 id="resultTitle">Evaluation details</h2>
+      <pre id="resultJson" aria-live="polite">Run an evaluation to inspect the triggered rules. No cryptographic audit signature is generated in the browser.</pre>
+    </section>
+    <section class="card span" aria-labelledby="batchTitle">
+      <h2 id="batchTitle">CSV batch evaluation</h2>
+      <p class="small">Upload a CSV with task_id, target_identifier and primary_metric columns. Optional: secondary_metric, is_critical_flag, status_descriptor. Maximum: 1 MB / 2,000 rows. Calculations run locally.</p>
+      <div class="field"><label for="file">CSV file</label><input id="file" type="file" accept=".csv,text/csv"></div>
+      <div class="actions">
+        <button id="sample" type="button" class="secondary">Run demo batch</button>
+        <button id="download" type="button" disabled>Download results CSV</button>
+      </div>
+      <p id="message" role="status" aria-live="polite"></p>
+      <div id="tableWrap" hidden>
+        <p id="batchSummary"></p><p class="small" id="batchCount"></p>
+        <div class="tableScroll"><table><thead><tr><th scope="col">Task</th><th scope="col">Urgency</th><th scope="col">Alerts</th></tr></thead><tbody id="batchRows"></tbody></table></div>
+      </div>
+    </section>
+  </div>
+  <p class="small">All values and results are ephemeral until explicitly exported. No client-side secret, HMAC key, analytics or external JavaScript library is used. The Python API is a separate backend deployment.</p>
+</main>
+<script type="module" src="./app.mjs"></script>
 </body>
 </html>
