@@ -52,8 +52,8 @@ def main(argv=None):
         )
         dossier = coordinator.process(payload)
         print("=" * 80)
-        print(f"  FLUXMIND: GENOME-SCALE METABOLIC FLUX BALANCE ANALYSIS (FBA) AGENT")
-        print(f"  Domain: Biomedical Scientific Discovery & Multi-Omics | Standard: COBRA Model / Systems Biology SBML")
+        print(f"  FLUXMIND LEGACY THRESHOLD RULES (NOT FBA)")
+        print(f"  Domain: Demonstration rule engine | No stoichiometric LP or SBML processing")
         print(f"  Task: {dossier['task_id']} | Status: [{dossier['overall_status']}] | Total Alerts: {dossier['total_alerts']}")
         print("=" * 80)
         for a in dossier["alerts"]:

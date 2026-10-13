@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Metabolomics Pathway Flux Engine API",
-    "description": "Enterprise Distributed Component Platform (Clinical & Cryptographic AI) adhering to CAP / CLSI / NIST Standards.",
-    "version": "3.0.0-ENTERPRISE",
+    "description": "Deterministic prototype threshold evaluation. No clinical validation or FBA.",
+    "version": "2.0.0",
     "contact": {
       "name": "Dr. Abu Suraih Sakhri",
       "url": "https://github.com/abusuraihsakhri"
@@ -25,14 +25,14 @@
         "summary": "Prometheus operational metrics",
         "responses": {
           "200": {
-            "description": "Prometheus text metrics"
+            "description": "JSON object with process-local counters"
           }
         }
       }
     },
     "/api/audit": {
       "post": {
-        "summary": "Dispatch task payload across specialized workers",
+        "summary": "Evaluate heuristic measurement and descriptor rules",
         "requestBody": {
           "content": {
             "application/json": {
@@ -76,7 +76,7 @@
     },
     "/api/chat": {
       "post": {
-        "summary": "Air-gapped supervisory conversational assistant",
+        "summary": "Return deterministic mock response",
         "requestBody": {
           "content": {
             "application/json": {
@@ -103,12 +103,31 @@
     },
     "/api/audit/logs": {
       "get": {
-        "summary": "Retrieve and cryptographically verify HMAC audit trail",
+        "summary": "Read administrative HMAC audit records with bearer token",
         "responses": {
           "200": {
             "description": "Cryptographic audit trail"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "503": {
+            "description": "Not enabled"
           }
-        }
+        },
+        "security": [
+          {
+            "AuditLogToken": []
+          }
+        ]
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "AuditLogToken": {
+        "type": "http",
+        "scheme": "bearer"
       }
     }
   }

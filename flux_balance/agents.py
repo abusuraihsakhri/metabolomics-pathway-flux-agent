@@ -105,6 +105,6 @@ class FluxBalanceCoordinator:
         if "status" in q or "ledger" in q:
             return f"FluxMind: Genome-Scale Metabolic Flux Balance Analysis (FBA) Agent currently managing {len(self.execution_ledger)} execution tasks in air-gapped memory."
         elif "standard" in q or "spec" in q:
-            return "Active runtime operating strictly according to COBRA Model / Systems Biology SBML specifications."
+            return "Prototype thresholds only; COBRA and SBML specifications are not implemented."
         else:
             return f"FluxMind: Genome-Scale Metabolic Flux Balance Analysis (FBA) Agent executive coordinator online. Zero-telemetry on-premises surveillance active."

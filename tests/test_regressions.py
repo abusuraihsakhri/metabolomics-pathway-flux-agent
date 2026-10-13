@@ -75,3 +75,23 @@ def test_audit_log_endpoint_requires_token(monkeypatch):
         api_audit_logs(authorization="Bearer wrong")
     assert exc.value.status_code == 401
     assert api_audit_logs(authorization="Bearer test-token-for-access")["verified"] is True
+
+
+def test_legacy_model_rejects_nonfinite_metrics():
+    from flux_balance.models import FrontierPayload
+    with pytest.raises(ValueError, match="finite"):
+        FrontierPayload("T", "K", float("nan"), 2, "NOMINAL")
+
+
+def test_mock_provider_does_not_claim_scientific_verification():
+    from agents.llm_factory import LLMFactory
+    response = LLMFactory.create("mock").invoke("What is FBA?")
+    assert "No model or scientific validation was performed" in response
+    with pytest.raises(NotImplementedError):
+        LLMFactory.create("openai")
+
+
+def test_simulator_rejects_zero_iterations():
+    from simulator import run_simulation
+    with pytest.raises(ValueError, match="positive"):
+        run_simulation(0)

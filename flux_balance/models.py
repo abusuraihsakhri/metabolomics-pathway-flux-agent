@@ -4,6 +4,7 @@ Domain: Biomedical Scientific Discovery & Multi-Omics
 Standard: COBRA Model / Systems Biology SBML
 """
 import datetime
+import math
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, List, Optional, Any
@@ -25,6 +26,12 @@ class FrontierPayload:
     is_critical_flag: bool = False
     attributes: Dict[str, Any] = field(default_factory=dict)
     timestamp: str = field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc).isoformat())
+
+    def __post_init__(self):
+        for name in ("primary_metric", "secondary_metric"):
+            value = getattr(self, name)
+            if not isinstance(value, (int, float)) or not math.isfinite(value):
+                raise ValueError(name + " must be a finite number")
 
 
 @dataclass

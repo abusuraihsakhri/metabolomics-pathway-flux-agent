@@ -15,7 +15,7 @@ def create_app():
 
         app = FastAPI(
             title="FluxMind: Genome-Scale Metabolic Flux Balance Analysis (FBA) Agent",
-            description="Constructs stoichiometric matrices (S * v = 0), applies linear programming to optimize biomass yields, and detects metabolic pathway bottlenecks.",
+            description="Prototype threshold checks only. No stoichiometric matrix construction, LP solver, or metabolic flux inference.",
             version="2.0.0-FRONTIER",
         )
 

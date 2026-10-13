@@ -14,8 +14,8 @@ supervisor = SystemSupervisor(model_provider="mock")
 
 app = FastAPI(
     title="Metabolomics Pathway Flux Agent API",
-    description="Enterprise Distributed Component Platform (Clinical & Biomedical AI)",
-    version="3.0.0-ENTERPRISE",
+    description="Deterministic measurement-rule evaluation prototype; not clinically validated",
+    version="2.0.0",
 )
 
 
@@ -25,7 +25,7 @@ class ChatRequest(BaseModel):
 
 @app.get("/health")
 def health():
-    return {"status": "HEALTHY", "service": "metabolomics-pathway-flux-agent", "domain": "Clinical & Biomedical AI", "standard": "CAP / CLSI / ISO Standards", "version": "3.0.0-ENTERPRISE"}
+    return {"status": "HEALTHY", "service": "metabolomics-pathway-flux-agent", "domain": "Clinical & Biomedical AI", "standard": "illustrative prototype thresholds", "version": "2.0.0"}
 
 
 @app.get("/metrics")
@@ -33,7 +33,7 @@ def metrics():
     return {
         "dossiers_processed_total": len(supervisor.dossier_registry),
         "audit_blocks_total": len(AuditLogger.get_trail()),
-        "system_status": "NOMINAL_OPTIMAL"
+        "system_status": "RUNNING"
     }
 
 

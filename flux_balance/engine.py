@@ -1,5 +1,5 @@
 """
-Core Algorithmic Engine & Cryptographic / Biological Logic for FluxMind: Genome-Scale Metabolic Flux Balance Analysis (FBA) Agent.
+Historical flux_balance module: heuristic threshold checks; no FBA implementation.
 Domain: Biomedical Scientific Discovery & Multi-Omics
 Standard: COBRA Model / Systems Biology SBML
 """
@@ -9,7 +9,7 @@ from .models import FrontierPayload, AgentTelemetryAlert, ExecutionStatus
 
 
 class FrontierDomainEngine:
-    STANDARD = "COBRA Model / Systems Biology SBML"
+    STANDARD = "Illustrative thresholds (not COBRA/SBML)"
     PRIMARY_BOUND = 25.0
     SECONDARY_BOUND = 10.0
 
